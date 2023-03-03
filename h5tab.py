@@ -225,37 +225,34 @@ class HDF5Item(TreeItem):
     def GetSubList(self):
         sublist = []
         if isinstance(self.id, h5py.h5d.DatasetID):
+            # This is a dataset. Add its description to the tree.
             sublist.append(DescrItem(self.id))
         if isinstance(self.id, h5py.h5g.GroupID):
+            # This is a group. Add its members to the tree.
             n = self.id.get_num_objs()
             for i in range(n):
                 name = self.id.get_objname_by_idx(i)
                 ot   = self.id.get_objtype_by_idx(i)
-                # Try to treat it as a dataset if it's not a group
-                if ot != h5py.h5g.GROUP:
-                    try:
-                        subid = h5py.h5d.open(self.id, name)
-                        sublist.append(HDF5Item(subid, name.decode(), self.file,
-                                                parent_name=self.path)) 
-                    except Exception as e:
-                        pass
-                # Try to treat it as a group if it's not a dataset
-                if ot != h5py.h5g.DATASET:
-                    try:
-                        subid = h5py.h5g.open(self.id, name)
-                        sublist.append(HDF5Item(subid, name.decode(), self.file,
-                                                parent_name=self.path))
-                    except Exception as e:
-                        pass
-        if not(self.is_file):
-            if h5py.h5a.get_num_attrs(self.id) > 0: 
-                for name in self.get_data().attrs.keys():
-                    try:
-                        value = self.get_data().attrs[name]
-                    except IOError as e:
-                        pass
-                    else:
-                        sublist.append(AttrItem(name, value))
+                if ot == h5py.h5g.DATASET:
+                    subid = h5py.h5d.open(self.id, name)
+                    sublist.append(HDF5Item(subid, name.decode(), self.file,
+                                            parent_name=self.path)) 
+                elif ot == h5py.h5g.GROUP:
+                    subid = h5py.h5g.open(self.id, name)
+                    sublist.append(HDF5Item(subid, name.decode(), self.file,
+                                            parent_name=self.path))
+                else:
+                    # Unsupported object type
+                    pass
+        # Add attributes of this object to the tree
+        if h5py.h5a.get_num_attrs(self.id) > 0: 
+            for name in self.get_data().attrs.keys():
+                try:
+                    value = self.get_data().attrs[name]
+                except IOError as e:
+                    pass
+                else:
+                    sublist.append(AttrItem(name, value))
 
         return sublist
     def GetIconName(self):
