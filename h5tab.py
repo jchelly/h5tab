@@ -1,4 +1,4 @@
-#!/cosma/local/Python/2.7.15/bin/python
+#!/usr/bin/env python
 
 #
 # TODO:
@@ -20,10 +20,10 @@ import h5py
 import os.path
 import sys
 
-from Tkinter import *
-from idlelib.TreeWidget import TreeItem, TreeNode
+from tkinter import *
+from idlelib.tree import TreeItem, TreeNode
 
-import tkFont
+import tkinter.font as TkFont
 
 ITEM_TOP     = 0
 ITEM_GROUP   = 1
@@ -432,7 +432,7 @@ class DataWindow():
             self.index.insert("end", str(i)+"\n")
         height = self.index.winfo_height()
         nrows = int(self.index.index("@0,%d" % height).split(".")[0])
-        self.row_height = int(height/nrows)
+        self.row_height = int(height//nrows)
 
         # Set up initial content
         self.update_nrows()
@@ -604,7 +604,7 @@ class BrowserWindow():
             try:
                 f = h5py.File(fname, "r")
             except IOError:
-                print "Unable to read file: ", fname
+                print("Unable to read file: ", fname)
                 continue
             top_item.add_child(HDF5Item(f.id, file=f, is_file=True))
             nloaded += 1
