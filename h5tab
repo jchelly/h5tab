@@ -74,7 +74,9 @@ def get_format(dtype):
     return fmt
 
 def get_width(dtype):
-    if dtype.kind == "S" or dtype.kind == "U" or dtype.kind == "a":
+    if h5py.check_string_dtype(dtype) is not None or h5py.check_vlen_dtype(dtype) is not None:
+        return max_width
+    elif dtype.kind == "S" or dtype.kind == "U" or dtype.kind == "a":
         return min(max_width, max((dtype.itemsize, min_width)))
     else:
         return min_width
