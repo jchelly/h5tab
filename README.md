@@ -27,8 +27,9 @@ datasets can be viewed.
 
 ## Limitations
 
+This is not a general purpose HDF5 file viewer.
+
   * Table rows always correspond to the first dimension so datasets with
     large dimensions other than the first can't be displayed
   * The program has no good way to display variable length datasets
-  * Columns in the data window can't be resized and the default widths are
-    not always suitable
+  * The tree view can be slow for large numbers of datasets
