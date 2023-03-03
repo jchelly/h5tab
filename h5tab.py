@@ -33,7 +33,7 @@ ITEM_DESCR   = 4
 
 icon_images = None
 
-# Nodes whioh are highlighted
+# Nodes which are highlighted
 selected_nodes = {}
 
 # Format for displaying values
@@ -188,7 +188,7 @@ class DescrItem(TreeItem):
             self.text += ", chunks="+str(chunk)
         for i in range(plist.get_nfilters()):
             (code, flags, value, name) = plist.get_filter(i)
-            self.text += ", "+str(name)
+            self.text += ", "+str(name.decode())
     def GetText(self):
         return self.text
     def IsExpandable(self):
@@ -235,24 +235,24 @@ class HDF5Item(TreeItem):
                 if ot != h5py.h5g.GROUP:
                     try:
                         subid = h5py.h5d.open(self.id, name)
-                        sublist.append(HDF5Item(subid, name, self.file,
+                        sublist.append(HDF5Item(subid, name.decode(), self.file,
                                                 parent_name=self.path)) 
-                    except Exception:
+                    except Exception as e:
                         pass
                 # Try to treat it as a group if it's not a dataset
                 if ot != h5py.h5g.DATASET:
                     try:
                         subid = h5py.h5g.open(self.id, name)
-                        sublist.append(HDF5Item(subid, name, self.file,
+                        sublist.append(HDF5Item(subid, name.decode(), self.file,
                                                 parent_name=self.path))
-                    except Exception:
+                    except Exception as e:
                         pass
         if not(self.is_file):
             if h5py.h5a.get_num_attrs(self.id) > 0: 
                 for name in self.get_data().attrs.keys():
                     try:
                         value = self.get_data().attrs[name]
-                    except IOError:
+                    except IOError as e:
                         pass
                     else:
                         sublist.append(AttrItem(name, value))
