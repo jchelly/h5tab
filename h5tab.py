@@ -179,16 +179,18 @@ class AttrItem(TreeItem):
 
 class DescrItem(TreeItem):
     """Tree widget item which represents a description of a dataset"""
-    def __init__(self, id):
+    def __init__(self, id, dtype, field):
         self.item_type = ITEM_DESCR
-        self.text = "shape="+str(id.shape)+", dtype="+type_string(id.get_type())
-        plist = id.get_create_plist()
-        if plist.get_layout() == h5py.h5d.CHUNKED:
-            chunk = plist.get_chunk()
-            self.text += ", chunks="+str(chunk)
-        for i in range(plist.get_nfilters()):
-            (code, flags, value, name) = plist.get_filter(i)
-            self.text += ", "+str(name.decode())
+        self.text = "shape="+str(id.shape)+", dtype="+str(dtype)
+        if field is None:
+            # Don't show layout and chunks for dataset sub-fields
+            plist = id.get_create_plist()
+            if plist.get_layout() == h5py.h5d.CHUNKED:
+                chunk = plist.get_chunk()
+                self.text += ", chunks="+str(chunk)
+            for i in range(plist.get_nfilters()):
+                (code, flags, value, name) = plist.get_filter(i)
+                self.text += ", "+str(name.decode())
     def GetText(self):
         return self.text
     def IsExpandable(self):
@@ -205,12 +207,13 @@ class DescrItem(TreeItem):
 #
 class HDF5Item(TreeItem):
     """Tree widget item which represents a HDF5 file, group or dataset"""
-    def __init__(self, id, name="", file=None, is_file=False, parent_name=""):
+    def __init__(self, id, name="", file=None, is_file=False, parent_name="", field=None):
         self.id      = id
         self.file    = file
         self.is_file = is_file
         self.name    = name
         self.path    = (parent_name+"/"+name).lstrip("/")
+        self.field   = field if field is not None else []
         if isinstance(self.id, h5py.h5d.DatasetID):
             self.item_type = ITEM_DATASET
         else:
@@ -225,8 +228,18 @@ class HDF5Item(TreeItem):
     def GetSubList(self):
         sublist = []
         if isinstance(self.id, h5py.h5d.DatasetID):
-            # This is a dataset. Add its description to the tree.
-            sublist.append(DescrItem(self.id))
+            # This is a dataset or a sub-field of a dataset. Find its data type.
+            dtype = self.id.get_type().dtype
+            if self.field is not None:
+                for f in self.field:
+                    dtype = dtype[f]
+            # Add its description to the tree.
+            sublist.append(DescrItem(self.id, dtype, field=self.field))
+            # Check for compound type and add sub fields
+            if dtype.fields is not None:
+                for field in dtype.fields:
+                    sublist.append(HDF5Item(self.id, field, self.file,
+                                            parent_name=self.path, field=self.field+[field,]))
         if isinstance(self.id, h5py.h5g.GroupID):
             # This is a group. Add its members to the tree.
             n = self.id.get_num_objs()
