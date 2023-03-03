@@ -132,7 +132,7 @@ class MyTreeNode(TreeNode):
             self.drawicon()
             self.drawtext()
             global selected_nodes
-            my_id = (self.item.file.filename, self.item.path)
+            my_id = (self.item.file.filename, self.item.path, self.item.field)
             if self.selected:
                 selected_nodes[my_id] = self.item
             else:
@@ -216,7 +216,7 @@ class HDF5Item(TreeItem):
             self.path    = (parent_name+"/"+name).lstrip("/")
         else:
             self.path = parent_name
-        self.field   = field if field is not None else []
+        self.field   = field if field is not None else ()
         if isinstance(self.id, h5py.h5d.DatasetID):
             self.item_type = ITEM_DATASET
         else:
@@ -242,7 +242,7 @@ class HDF5Item(TreeItem):
             if dtype.fields is not None:
                 for field in dtype.fields:
                     sublist.append(HDF5Item(self.id, field, self.file,
-                                            parent_name=self.path, field=self.field+[field,]))
+                                            parent_name=self.path, field=self.field+(field,)))
         if isinstance(self.id, h5py.h5g.GroupID):
             # This is a group. Add its members to the tree.
             n = self.id.get_num_objs()
