@@ -23,7 +23,7 @@ import sys
 from tkinter import *
 from idlelib.tree import TreeItem, TreeNode
 
-import tkinter.font as TkFont
+import tkinter.font as tkFont
 
 ITEM_TOP     = 0
 ITEM_GROUP   = 1
