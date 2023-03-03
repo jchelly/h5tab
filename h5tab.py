@@ -212,7 +212,10 @@ class HDF5Item(TreeItem):
         self.file    = file
         self.is_file = is_file
         self.name    = name
-        self.path    = (parent_name+"/"+name).lstrip("/")
+        if field is None:
+            self.path    = (parent_name+"/"+name).lstrip("/")
+        else:
+            self.path = parent_name
         self.field   = field if field is not None else []
         if isinstance(self.id, h5py.h5d.DatasetID):
             self.item_type = ITEM_DATASET
@@ -275,9 +278,9 @@ class HDF5Item(TreeItem):
             return "folder"
     def get_data(self):
         if len(self.path) > 0:
-            return self.file[self.path]
+            return self.file[self.path], self.field
         else:
-            return self.file
+            return self.file, self.field
 
 class AutoScrollbar(Scrollbar):
     def set(self, lo, hi):
@@ -296,7 +299,7 @@ class DataWindow():
         self.ids = data.keys()
         self.filenames = [id[0] for id in self.ids]
         self.names     = [id[1] for id in self.ids]
-        self.datasets  = [data[k].get_data() for k in self.ids]
+        self.datasets  = [data[k].get_data()[0] for k in self.ids]
         self.nrows_tot = max([get_shape(arr)[0] for arr in self.datasets])
 
         # Sort by file name
