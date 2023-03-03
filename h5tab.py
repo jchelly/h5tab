@@ -278,9 +278,9 @@ class HDF5Item(TreeItem):
             return "folder"
     def get_data(self):
         if len(self.path) > 0:
-            return self.file[self.path], self.field
+            return self.file[self.path]
         else:
-            return self.file, self.field
+            return self.file
 
 class AutoScrollbar(Scrollbar):
     def set(self, lo, hi):
@@ -299,7 +299,8 @@ class DataWindow():
         self.ids = data.keys()
         self.filenames = [id[0] for id in self.ids]
         self.names     = [id[1] for id in self.ids]
-        self.datasets  = [data[k].get_data()[0] for k in self.ids]
+        self.fields    = [id[2] for id in self.ids]
+        self.datasets  = [data[k].get_data() for k in self.ids]
         self.nrows_tot = max([get_shape(arr)[0] for arr in self.datasets])
 
         # Sort by file name
@@ -309,6 +310,7 @@ class DataWindow():
         self.names     = [self.names[i]     for i in idx]
         self.filenames = [self.filenames[i] for i in idx]
         self.datasets  = [self.datasets[i]  for i in idx]
+        self.fields    = [self.fields[i]    for i in idx]
 
         # Figure out which columns need to show file names
         self.nspan = [1 for _ in range(len(self.names))]
@@ -362,8 +364,11 @@ class DataWindow():
 
         # Calculate column widths
         self.widths = []
-        for (name,dset,fname) in zip(self.names,self.datasets,self.filenames):
-            width = get_width(dset.dtype)
+        for (name,dset,fname,fields) in zip(self.names,self.datasets,self.filenames,self.fields):
+            dtype = dset.dtype
+            for f in fields:
+                dtype = dtype[f]
+            width = get_width(dtype)
             if len(dset.shape) > 1:
                 width += 3
                 for s in dset.shape[1:]:
@@ -392,12 +397,19 @@ class DataWindow():
         self.index  = Text(self.frame, font=font, wrap=NONE,
                            width=12, bg="light cyan")
         self.index.grid(row=2, column=0, sticky=W+N+S)
-        for (name,dset,fname,width,fw) in zip(self.names,self.datasets,
-                                              self.filenames, self.widths,
-                                              self.fname_widths):
+        for (name,dset,fname,width,fw,fields) in zip(self.names,self.datasets,
+                                                     self.filenames, self.widths,
+                                                     self.fname_widths, self.fields):
+            if len(fields) == 0:
+                # Basic type - just display the dataset name
+                display_name = name
+            else:
+                # Compound type - need to display the field name too
+                display_name = "|".join((name,)+fields)
+
             self.title.append(Text(self.frame, font=font, wrap=NONE,
                                    width=width, height=1, bg="light yellow"))
-            self.title[-1].insert("end", name+" ")
+            self.title[-1].insert("end", display_name+" ")
             self.title[-1].grid(row=1, column=icol,sticky=N+W)
             self.title[-1].config(state=DISABLED)
             self.column.append(Text(self.frame, font=font, wrap=NONE,
@@ -485,7 +497,11 @@ class DataWindow():
                 self.index.insert("end", str(i))
         self.index.config(state=DISABLED)
         # Redraw columns
-        for col, dat in zip(self.column, self.datasets):
+        for col, dat, fields in zip(self.column, self.datasets, self.fields):
+            # Find data type of this column
+            dtype = dat.dtype
+            for f in fields:
+                dtype = dtype[f]
             # Clear this column
             col.config(state=NORMAL)
             col.delete(1.0, END)
@@ -506,6 +522,8 @@ class DataWindow():
                         ilast = min(self.ilast, dat.shape[0])
                         # Read the data
                         d = dat[self.ifirst:ilast, ...]
+                        for f in fields:
+                            d = d[f]
                         # Decide format to use
                         fmt = get_format(d.dtype)
                         # Add values to display
