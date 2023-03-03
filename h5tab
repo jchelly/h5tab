@@ -57,6 +57,12 @@ def get_shape(data):
         return [1]
 
 def get_format(dtype):
+    # Check for variable length data types
+    if h5py.check_string_dtype(dtype) is not None:
+        return "%s"
+    elif h5py.check_vlen_dtype(dtype) is not None:
+        dtype = h5py.check_vlen_dtype(dtype)
+    # Choose format string depending on base type
     if dtype.kind == "i" or dtype.kind == "u":
         fmt = int_fmt
     elif dtype.kind == "f":
@@ -103,20 +109,30 @@ def get_icons():
 
 def value_to_text(value, fmt):
     """Write out a multidimensional array as text"""
-    if hasattr(value, "shape") and value.shape is not None and len(value.shape) > 0:
+    if value.dtype.kind == "O" and value.shape == ():
+        # Value is a single object reference
+        return value_to_text(value[()], fmt)
+    elif len(value.shape) > 0:
+        # Value is an array, possibly of objects
         s = []
         for i in range(value.shape[0]):
             s.append(value_to_text(value[i,...], fmt))
-        return "{" + (",".join(s)) + "}"
+        return "[" + (",".join(s)) + "]"
     else:
+        # Value is a non-object scalar
         if fmt is None:
             return str(value)
         else:
             return fmt % value
 
-def type_string(id):
+def type_string(dtype):
     """Return a description of a HDF5 data type"""
-    return str(id.dtype)
+    if h5py.check_string_dtype(dtype) is not None:
+        return "vlen string"
+    elif h5py.check_vlen_dtype(dtype) is not None:
+        return "vlen "+str(h5py.check_vlen_dtype(dtype))
+    else:
+        return str(dtype)
 
 class MyTreeNode(TreeNode):
     def __init__(self, canvas, parent, item):
@@ -181,7 +197,7 @@ class DescrItem(TreeItem):
     """Tree widget item which represents a description of a dataset"""
     def __init__(self, id, dtype, field):
         self.item_type = ITEM_DESCR
-        self.text = "shape="+str(id.shape)+", dtype="+str(dtype)
+        self.text = "shape="+str(id.shape)+", dtype="+type_string(dtype)
         if field is None:
             # Don't show layout and chunks for dataset sub-fields
             plist = id.get_create_plist()
