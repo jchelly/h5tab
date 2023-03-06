@@ -279,7 +279,7 @@ class HDF5Item(TreeItem):
                     # Unsupported object type
                     pass
         # Add attributes of this object to the tree
-        if h5py.h5a.get_num_attrs(self.id) > 0: 
+        if not(self.is_file) and h5py.h5a.get_num_attrs(self.id) > 0: 
             for name in self.get_data().attrs.keys():
                 try:
                     value = self.get_data().attrs[name]
