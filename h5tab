@@ -280,8 +280,17 @@ class HDF5Item(TreeItem):
                 else:
                     # Unsupported object type
                     pass
+        # Get number of attributes on this object
+        try:
+            nr_attrs = h5py.h5a.get_num_attrs(self.id)
+        except ValueError:
+            # Workaround for old HDF5 versions: need to open root group
+            if self.is_file:
+                nr_attrs = h5py.h5a.get_num_attrs(self.id["/"])
+            else:
+                raise
         # Add attributes of this object to the tree
-        if not(self.is_file) and h5py.h5a.get_num_attrs(self.id) > 0: 
+        if nr_attrs > 0: 
             for name in self.get_data().attrs.keys():
                 try:
                     value = self.get_data().attrs[name]
