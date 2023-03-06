@@ -111,7 +111,9 @@ def get_icons():
 
 def value_to_text(value, fmt):
     """Write out a multidimensional array as text"""
-    if value.dtype.kind == "O" and value.shape == ():
+    if isinstance(value, str):
+        return value
+    elif value.dtype.kind == "O" and value.shape == ():
         # Value is a single object reference
         return value_to_text(value[()], fmt)
     elif len(value.shape) > 0:
