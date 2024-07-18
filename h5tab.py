@@ -708,8 +708,8 @@ class BrowserWindow():
         if windows_open == 0:
             root.destroy()
 
-if __name__ == "__main__":
-
+def main():
+            
     global root
     global windows_open
 
