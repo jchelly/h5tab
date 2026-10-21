@@ -202,12 +202,14 @@ class DescrItem(TreeItem):
     def __init__(self, id, dtype, field):
         self.item_type = ITEM_DESCR
         self.text = "shape="+str(id.shape)+", dtype="+type_string(dtype)
-        if field is None:
+        if len(field) == 0:
             # Don't show layout and chunks for dataset sub-fields
             plist = id.get_create_plist()
             if plist.get_layout() == h5py.h5d.CHUNKED:
                 chunk = plist.get_chunk()
                 self.text += ", chunks="+str(chunk)
+            if plist.get_layout() == h5py.h5d.VIRTUAL:
+                self.text += ", virtual"
             for i in range(plist.get_nfilters()):
                 (code, flags, value, name) = plist.get_filter(i)
                 self.text += ", "+str(name.decode())
@@ -253,9 +255,8 @@ class HDF5Item(TreeItem):
         if isinstance(self.id, h5py.h5d.DatasetID):
             # This is a dataset or a sub-field of a dataset. Find its data type.
             dtype = self.id.get_type().dtype
-            if self.field is not None:
-                for f in self.field:
-                    dtype = dtype[f]
+            for f in self.field:
+                dtype = dtype[f]
             # Add its description to the tree.
             sublist.append(DescrItem(self.id, dtype, field=self.field))
             # Check for compound type and add sub fields
