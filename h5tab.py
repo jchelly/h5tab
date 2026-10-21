@@ -158,7 +158,7 @@ class MyTreeNode(TreeNode):
             else:
                 if my_id in selected_nodes:
                     del selected_nodes[my_id]
-                
+
     def geticonimage(self, name):
         global icon_images
         if icon_images is None:
@@ -181,7 +181,7 @@ class TopItem(TreeItem):
         return self.nodes
     def add_child(self, child):
         self.nodes.append(child)
-    
+
 class AttrItem(TreeItem):
     """Tree widget item which represents a HDF5 attribute"""
     def __init__(self, name, value):
@@ -324,7 +324,7 @@ class DataWindow():
 
         global windows_open
         windows_open += 1
-        
+
         self.ids = data.keys()
         self.filenames = [id[0] for id in self.ids]
         self.names     = [id[1] for id in self.ids]
@@ -350,7 +350,7 @@ class DataWindow():
         for i in range(1, len(self.names)):
             if self.filenames[i] == self.filenames[i-1]:
                 self.nspan[i] = 0
-                    
+
         # Make top level window
         self.toplevel = Toplevel()
         self.toplevel.title("HDF5 data table")
@@ -385,7 +385,7 @@ class DataWindow():
         # Put a canvas in the window
         self.canvas = Canvas(self.toplevel, xscrollcommand=hsbar.set)
         self.canvas.grid(row=0, column=0, sticky=N+S+E+W)
-        hsbar.config(command=self.canvas.xview)                   
+        hsbar.config(command=self.canvas.xview)
 
         # Put a frame in the canvas
         self.frame = Frame(self.canvas, bd=3, relief=SUNKEN)
@@ -416,7 +416,7 @@ class DataWindow():
                 w += self.widths[icol+i]
             self.fname_widths.append(w)
             icol += 1
-            
+
         # Add text widgets with column headings and data columns
         font = tkFont.Font(family="courier", size=-16)
         self.title = []
@@ -480,7 +480,7 @@ class DataWindow():
             self.bind_scrolling(t)
         for f in self.fname:
             self.bind_scrolling(f)
-            
+
         # Store height of one row of text
         for i in range(1000):
             self.index.insert("end", str(i)+"\n")
@@ -562,7 +562,7 @@ class DataWindow():
                                            "\n")
                             else:
                                 col.insert("end", value_to_text(d[i,...],fmt))
-  
+
             col.config(state=DISABLED)
 
 
@@ -583,7 +583,7 @@ class DataWindow():
             else:
                 i = self.ifirst + step * self.nrows_display
         self.move_to_row(i)
-    
+
     def on_return(self, event):
         try:
             i = int(self.entry.get())
@@ -624,7 +624,7 @@ class DataWindow():
              self.row_height)
         n = max((0, n))
         self.nrows_display = int(n)
-        
+
 class BrowserWindow():
     def __init__(self, filenames):
 
@@ -646,20 +646,20 @@ class BrowserWindow():
         top_node = MyTreeNode(canvas, None, top_item)
 
         vsbar = AutoScrollbar(self.toplevel)
-        vsbar.config(command=canvas.yview)                   
-        canvas.config(yscrollcommand=vsbar.set)              
+        vsbar.config(command=canvas.yview)
+        canvas.config(yscrollcommand=vsbar.set)
         vsbar.grid(row=0, column=1, sticky=N+S)
 
         hsbar = AutoScrollbar(self.toplevel, orient=HORIZONTAL)
-        hsbar.config(command=canvas.xview)                   
-        canvas.config(xscrollcommand=hsbar.set)              
+        hsbar.config(command=canvas.xview)
+        canvas.config(xscrollcommand=hsbar.set)
         hsbar.grid(row=1, column=0, sticky=E+W)
         canvas.bind('<4>', lambda event : canvas.yview('scroll', -1, 'units'))
         canvas.bind('<5>', lambda event : canvas.yview('scroll', 1, 'units'))
 
         self.toplevel.grid_rowconfigure(0, weight=1)
         self.toplevel.grid_columnconfigure(0, weight=1)
-        
+
         for fname in sys.argv[1:]:
             try:
                 f = h5py.File(fname, "r")
@@ -681,11 +681,11 @@ class BrowserWindow():
         b2 = Button(bframe, text="Deselect all",
                     command=self.deselect_all)
         b2.grid(row=0, column=1)
-        
+
         self.canvas   = canvas
         self.top_node = top_node
         self.top_item = top_item
-        
+
         top_node.update()
         top_node.expand()
 
@@ -709,13 +709,13 @@ class BrowserWindow():
             root.destroy()
 
 def main():
-            
+
     global root
     global windows_open
 
     root = Tk()
     root.withdraw()
-    
+
     windows_open = 0
 
     filenames = sys.argv[1:]
